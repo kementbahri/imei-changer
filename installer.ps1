@@ -47,6 +47,11 @@ pip install pure-python-adb==0.3.0
 # Programı çalıştır
 Write-Host "`nKurulum tamamlandi!" -ForegroundColor Green
 Write-Host "Program baslatiliyor..." -ForegroundColor Green
+
+# Kurulum tamamlandıktan sonra scriptin bulunduğu klasöre geç
+Set-Location -Path $PSScriptRoot
+
+# Programı başlat
 python imei_changer.py
 
 Write-Host "`nCikmak icin bir tusa basin..." -ForegroundColor Yellow

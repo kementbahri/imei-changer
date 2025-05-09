@@ -1,7 +1,8 @@
 import sys
 import os
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
-                           QPushButton, QLineEdit, QLabel, QComboBox, QMessageBox)
+                           QPushButton, QLineEdit, QLabel, QComboBox, QMessageBox,
+                           QTabWidget, QTextEdit, QHBoxLayout)
 from PyQt5.QtCore import Qt
 import subprocess
 
@@ -9,7 +10,7 @@ class IMEIChanger(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("IMEI Değiştirici")
-        self.setGeometry(100, 100, 500, 400)
+        self.setGeometry(100, 100, 800, 600)
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #f0f0f0;
@@ -17,16 +18,17 @@ class IMEIChanger(QMainWindow):
             QPushButton {
                 background-color: #4CAF50;
                 color: white;
-                padding: 8px;
+                padding: 10px;
                 border: none;
                 border-radius: 4px;
                 font-size: 14px;
+                min-width: 150px;
             }
             QPushButton:hover {
                 background-color: #45a049;
             }
             QLineEdit {
-                padding: 8px;
+                padding: 10px;
                 border: 1px solid #ddd;
                 border-radius: 4px;
                 font-size: 14px;
@@ -36,55 +38,123 @@ class IMEIChanger(QMainWindow):
                 color: #333;
             }
             QComboBox {
-                padding: 8px;
+                padding: 10px;
                 border: 1px solid #ddd;
                 border-radius: 4px;
                 font-size: 14px;
+            }
+            QTabWidget::pane {
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                background: white;
+            }
+            QTabBar::tab {
+                background: #f0f0f0;
+                padding: 10px 20px;
+                margin-right: 2px;
+            }
+            QTabBar::tab:selected {
+                background: white;
+                border-bottom: 2px solid #4CAF50;
             }
         """)
         
         # Ana widget ve layout
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-        layout = QVBoxLayout(central_widget)
-        layout.setSpacing(10)
-        layout.setContentsMargins(20, 20, 20, 20)
+        main_layout = QVBoxLayout(central_widget)
+        
+        # Tab widget oluştur
+        tabs = QTabWidget()
+        main_layout.addWidget(tabs)
+        
+        # Ana sekme
+        main_tab = QWidget()
+        main_layout_tab = QVBoxLayout(main_tab)
         
         # Başlık
         title_label = QLabel("IMEI Değiştirici")
         title_label.setStyleSheet("font-size: 24px; font-weight: bold; color: #333; margin-bottom: 20px;")
         title_label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(title_label)
+        main_layout_tab.addWidget(title_label)
         
-        # Cihaz seçimi
-        layout.addWidget(QLabel("Bağlı Cihazlar:"))
+        # Adım 1: Cihaz Seçimi
+        step1_group = QWidget()
+        step1_layout = QVBoxLayout(step1_group)
+        step1_layout.addWidget(QLabel("Adım 1: Cihaz Seçimi"))
+        step1_layout.addWidget(QLabel("Bağlı Cihazlar:"))
         self.device_combo = QComboBox()
-        layout.addWidget(self.device_combo)
-        
-        # Yenile butonu
+        step1_layout.addWidget(self.device_combo)
         refresh_button = QPushButton("Cihazları Yenile")
         refresh_button.clicked.connect(self.refresh_devices)
-        layout.addWidget(refresh_button)
+        step1_layout.addWidget(refresh_button)
+        main_layout_tab.addWidget(step1_group)
         
-        # Mevcut IMEI gösterimi
+        # Adım 2: Mevcut IMEI
+        step2_group = QWidget()
+        step2_layout = QVBoxLayout(step2_group)
+        step2_layout.addWidget(QLabel("Adım 2: Mevcut IMEI"))
         self.current_imei_label = QLabel("Mevcut IMEI: ")
-        layout.addWidget(self.current_imei_label)
+        step2_layout.addWidget(self.current_imei_label)
+        main_layout_tab.addWidget(step2_group)
         
-        # Yeni IMEI girişi
-        layout.addWidget(QLabel("Yeni IMEI Numarası:"))
+        # Adım 3: Yeni IMEI
+        step3_group = QWidget()
+        step3_layout = QVBoxLayout(step3_group)
+        step3_layout.addWidget(QLabel("Adım 3: Yeni IMEI Girişi"))
         self.new_imei_input = QLineEdit()
         self.new_imei_input.setPlaceholderText("15 haneli IMEI numarası girin")
-        layout.addWidget(self.new_imei_input)
-        
-        # IMEI değiştirme butonu
+        step3_layout.addWidget(self.new_imei_input)
         change_button = QPushButton("IMEI Değiştir")
         change_button.clicked.connect(self.change_imei)
-        layout.addWidget(change_button)
+        step3_layout.addWidget(change_button)
+        main_layout_tab.addWidget(step3_group)
         
         # Durum mesajı
         self.status_label = QLabel("")
         self.status_label.setStyleSheet("color: #666; margin-top: 10px;")
-        layout.addWidget(self.status_label)
+        main_layout_tab.addWidget(self.status_label)
+        
+        # Yardım sekmesi
+        help_tab = QWidget()
+        help_layout = QVBoxLayout(help_tab)
+        
+        help_text = QTextEdit()
+        help_text.setReadOnly(True)
+        help_text.setHtml("""
+        <h2>IMEI Değiştirici Kullanım Kılavuzu</h2>
+        
+        <h3>Ön Hazırlık:</h3>
+        <ol>
+            <li>Telefonunuzda "Ayarlar" > "Telefon Hakkında" > "Derleme numarası"na 7 kez tıklayın</li>
+            <li>"Geliştirici Seçenekleri"ne girin</li>
+            <li>"USB Hata Ayıklama"yı aktif edin</li>
+            <li>Telefonu USB kablosu ile bilgisayara bağlayın</li>
+            <li>USB bağlantı modunu "Dosya Aktarımı" olarak ayarlayın</li>
+        </ol>
+        
+        <h3>Program Kullanımı:</h3>
+        <ol>
+            <li><b>Adım 1:</b> "Cihazları Yenile" butonuna tıklayın ve telefonunuzu listeden seçin</li>
+            <li><b>Adım 2:</b> Mevcut IMEI numaranızı kontrol edin</li>
+            <li><b>Adım 3:</b> Yeni IMEI numarasını girin (15 haneli olmalı)</li>
+            <li><b>Adım 4:</b> "IMEI Değiştir" butonuna tıklayın</li>
+            <li><b>Adım 5:</b> Telefonunuzu yeniden başlatın</li>
+        </ol>
+        
+        <h3>Önemli Notlar:</h3>
+        <ul>
+            <li>IMEI numarası 15 haneli olmalıdır</li>
+            <li>İşlem sırasında telefonunuzu çıkarmayın</li>
+            <li>Hata durumunda telefonunuzu yeniden başlatın</li>
+            <li>Bu işlem telefonunuzun garantisini etkileyebilir</li>
+        </ul>
+        """)
+        help_layout.addWidget(help_text)
+        
+        # Sekmeleri ekle
+        tabs.addTab(main_tab, "IMEI Değiştirici")
+        tabs.addTab(help_tab, "Yardım")
         
         # İlk cihazları yükle
         self.refresh_devices()
@@ -138,7 +208,7 @@ class IMEIChanger(QMainWindow):
             subprocess.run(command, shell=True)
             
             self.status_label.setText("IMEI başarıyla değiştirildi!")
-            QMessageBox.information(self, "Başarılı", "IMEI başarıyla değiştirildi!")
+            QMessageBox.information(self, "Başarılı", "IMEI başarıyla değiştirildi!\nLütfen telefonunuzu yeniden başlatın.")
             self.show_current_imei()
             
         except Exception as e:
