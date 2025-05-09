@@ -90,12 +90,15 @@ class IMEIChanger(QMainWindow):
         step1_layout.addWidget(refresh_button)
         main_layout_tab.addWidget(step1_group)
         
-        # Adım 2: Mevcut IMEI
+        # Adım 2: Mevcut IMEI ve Root Bilgisi
         step2_group = QWidget()
         step2_layout = QVBoxLayout(step2_group)
         step2_layout.addWidget(QLabel("Adım 2: Mevcut IMEI"))
         self.current_imei_label = QLabel("Mevcut IMEI: ")
         step2_layout.addWidget(self.current_imei_label)
+        self.root_status_label = QLabel("Root: Bilinmiyor")
+        self.root_status_label.setStyleSheet("color: #007700; font-weight: bold;")
+        step2_layout.addWidget(self.root_status_label)
         main_layout_tab.addWidget(step2_group)
         
         # Adım 3: Yeni IMEI
@@ -187,8 +190,18 @@ class IMEIChanger(QMainWindow):
                                      capture_output=True, text=True)
                 imei = result.stdout.strip()
                 self.current_imei_label.setText(f"Mevcut IMEI: {imei}")
+                # Root kontrolü
+                root_result = subprocess.run(['adb', '-s', device, 'shell', 'su', '-c', 'id'], capture_output=True, text=True)
+                if 'uid=0(root)' in root_result.stdout:
+                    self.root_status_label.setText("Root: Var")
+                    self.root_status_label.setStyleSheet("color: #007700; font-weight: bold;")
+                else:
+                    self.root_status_label.setText("Root: Yok")
+                    self.root_status_label.setStyleSheet("color: #bb0000; font-weight: bold;")
         except Exception as e:
             self.status_label.setText(f"Hata: {str(e)}")
+            self.root_status_label.setText("Root: Bilinmiyor")
+            self.root_status_label.setStyleSheet("color: #888; font-weight: bold;")
 
     def change_imei(self):
         try:
